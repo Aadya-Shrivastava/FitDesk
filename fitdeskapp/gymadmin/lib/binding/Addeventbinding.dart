@@ -1,0 +1,17 @@
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/get_instance.dart';
+import 'package:gymadmin/controller/AddAttendancecontroller.dart';
+import 'package:gymadmin/controller/Addeventcontroller.dart';
+import 'package:gymadmin/controller/Addtraineecontroller.dart';
+import 'package:gymadmin/controller/Addtrainercontroller.dart';
+import 'package:gymadmin/controller/dashboardcontroller.dart';
+import 'package:gymadmin/controller/logincontroller.dart';
+
+class Addeventbinding extends Bindings{
+  @override
+  void dependencies() {
+    // TODO: implement dependencies
+    Get.lazyPut(()=>EventController());
+  }
+
+}

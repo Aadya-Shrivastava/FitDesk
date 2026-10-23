@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gymadmin",
+            "cwd": "fitdeskapp\\gymadmin",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "gymadmin (profile mode)",
+            "cwd": "fitdeskapp\\gymadmin",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "gymadmin (release mode)",
+            "cwd": "fitdeskapp\\gymadmin",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "gymtrainee",
+            "cwd": "fitdesktraineeandtrainer\\gymtrainee",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "gymtrainee (profile mode)",
+            "cwd": "fitdesktraineeandtrainer\\gymtrainee",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "gymtrainee (release mode)",
+            "cwd": "fitdesktraineeandtrainer\\gymtrainee",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
