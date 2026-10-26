@@ -1,4 +1,4 @@
-package com.example.gymadmin
+package com.apexinnovation.fitdesktrainer
 
 import io.flutter.embedding.android.FlutterActivity
 
