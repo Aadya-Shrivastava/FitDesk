@@ -6,6 +6,7 @@ import 'package:gymtrainee/Model/workoutmodel.dart';
 
 import '../controller/viewtodayworkoutcontroller.dart';
 import 'package:gymtrainee/theme/app_palette.dart';
+import 'package:gymtrainee/widgets/ui_kit.dart';
 import 'package:gymtrainee/widgets/state_views.dart';
 
 class ViewTodayWorkout extends StatelessWidget {
@@ -17,22 +18,7 @@ class ViewTodayWorkout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppPalette.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          "Today's Workout",
-          style: GoogleFonts.poppins(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppPalette.primary,
-        elevation: 0,
-      ),
+      appBar: simpleAppBar('Today\'s Workout'),
       body: Obx(() {
         if (c.isLoading.value) return const LoadingView();
 
@@ -45,7 +31,8 @@ class ViewTodayWorkout extends StatelessWidget {
           return EmptyView(
             icon: Icons.fitness_center_rounded,
             title: 'No workout plan yet',
-            subtitle: 'Your trainer hasn\'t assigned a workout. It will show up here once they do.',
+            subtitle:
+                'Your trainer hasn\'t assigned a workout. It will show up here once they do.',
             onRefresh: c.fetchWorkouts,
           );
         }
@@ -137,7 +124,7 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppPalette.primary,
+      color: AppPalette.background,
       child: Stack(
         children: [
           // ✅ FIX: Increased height (was 160.h) + gives room on small phones
@@ -145,11 +132,7 @@ class _HeaderCard extends StatelessWidget {
             height: 200.h,
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppPalette.primary, AppPalette.accent],
-              ),
+              gradient: AppPalette.headerGradient,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(18.r),
                 bottomRight: Radius.circular(18.r),
@@ -414,7 +397,7 @@ class _CardShell extends StatelessWidget {
             blurRadius: 14,
             color: Colors.black.withOpacity(0.06),
             offset: const Offset(0, 6),
-          )
+          ),
         ],
       ),
       child: Column(
@@ -435,4 +418,3 @@ class _CardShell extends StatelessWidget {
     );
   }
 }
-

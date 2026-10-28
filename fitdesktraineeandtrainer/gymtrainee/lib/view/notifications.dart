@@ -30,6 +30,7 @@ class _NotificationsViewState extends State<NotificationsView> {
         Obx(() => c.unreadCount > 0
             ? TextButton(
                 onPressed: () => c.markAllSeen().then((_) => setState(() {})),
+                style: TextButton.styleFrom(foregroundColor: Colors.white),
                 child: const Text('Mark all read'),
               )
             : const SizedBox.shrink()),

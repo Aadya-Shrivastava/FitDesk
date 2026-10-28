@@ -37,7 +37,11 @@ class NotificationController extends GetxController {
           .map(NotificationItem.fromJson)
           .toList()
         ..sort((a, b) => (b.createdAt ?? '').compareTo(a.createdAt ?? ''));
-      items.assignAll(list);
+      // The API sends the same notification twice (different ids and slightly
+      // different timestamps), so keep only the newest per title + message.
+      final unique = <String>{};
+      items.assignAll(list.where((n) =>
+          unique.add('${n.title.trim().toLowerCase()}|${n.message.trim().toLowerCase()}')));
     } catch (e) {
       Api.report('Notifications.fetch', e);
       error.value = Api.message(e);

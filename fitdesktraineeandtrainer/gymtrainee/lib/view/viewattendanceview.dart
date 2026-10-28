@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
+import 'package:table_calendar/table_calendar.dart';
 import 'package:gymtrainee/Model/viewattendacnemodel.dart';
 import 'package:gymtrainee/controller/viewattendancecontroller.dart';
 import 'package:gymtrainee/theme/app_palette.dart';
+import 'package:gymtrainee/widgets/ui_kit.dart';
 import 'package:gymtrainee/widgets/state_views.dart';
 import 'package:gymtrainee/widgets/date_calc.dart';
 
@@ -17,12 +19,7 @@ class Viewattendanceview extends GetView<Viewattendancecontroller> {
 
     return Scaffold(
       backgroundColor: AppPalette.background,
-      appBar: AppBar(
-        title: const Text('Attendance'),
-        elevation: 0,
-        backgroundColor: AppPalette.primary,
-        foregroundColor: AppPalette.textPrimary,
-      ),
+      appBar: simpleAppBar('Attendance'),
       body: Obx(() {
         if (controller.isLoading.value) return const LoadingView();
 
@@ -42,16 +39,42 @@ class Viewattendanceview extends GetView<Viewattendancecontroller> {
           );
         }
 
+        final visible = controller.visible;
+        final day = controller.selectedDay.value;
         return RefreshIndicator(
           onRefresh: controller.refreshAttendance,
           child: ListView.builder(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            itemCount: controller.attendanceList.length + 1,
+            itemCount: visible.length + 3,
             itemBuilder: (context, index) {
               if (index == 0) return _Summary(c: controller);
-              final a = controller.attendanceList[index - 1];
-              return _AttendanceCard(att: a);
+              if (index == 1) return _AttendanceCalendar(c: controller);
+              if (index == 2) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SectionHeader(
+                        day == null
+                            ? 'All visits'
+                            : DateFormat('EEE, dd MMM yyyy').format(day),
+                        action: day == null ? null : 'Show all',
+                        onAction: () => controller.selectedDay.value = null,
+                      ),
+                      if (visible.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Text('No visit on this day.',
+                              textAlign: TextAlign.center,
+                              style: appText(13, color: AppPalette.textSecondary)),
+                        ),
+                    ],
+                  ),
+                );
+              }
+              return _AttendanceCard(att: visible[index - 3]);
             },
           ),
         );
@@ -126,6 +149,119 @@ class _Summary extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Month calendar: visited days filled purple, tap a day to see its record.
+class _AttendanceCalendar extends StatelessWidget {
+  final Viewattendancecontroller c;
+  const _AttendanceCalendar({required this.c});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      final visits = c.byDay;
+      final selected = c.selectedDay.value;
+      final now = DateTime.now();
+
+      Widget cell(DateTime day, {bool outside = false}) {
+        final key = Viewattendancecontroller.dayKey(day);
+        final records = visits[key];
+        final isSelected =
+            selected != null && Viewattendancecontroller.dayKey(selected) == key;
+        final isToday = key == Viewattendancecontroller.dayKey(now);
+        final absent = records != null &&
+            records.every((a) => (a.status ?? '').toLowerCase().contains('absent'));
+
+        Color? fill;
+        if (records != null) fill = absent ? AppPalette.error.withValues(alpha: 0.25) : AppPalette.primary;
+        if (isSelected) fill = AppPalette.secondary;
+
+        return Container(
+          margin: const EdgeInsets.all(4),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: fill,
+            shape: BoxShape.circle,
+            border: isToday ? Border.all(color: AppPalette.secondary, width: 1.5) : null,
+          ),
+          child: Text(
+            '${day.day}',
+            style: appText(12.5,
+                weight: records != null || isSelected ? FontWeight.w700 : FontWeight.w400,
+                color: isSelected
+                    ? AppPalette.background
+                    : outside
+                        ? AppPalette.textSecondary.withValues(alpha: 0.35)
+                        : AppPalette.textPrimary),
+          ),
+        );
+      }
+
+      return Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+        decoration: BoxDecoration(
+          color: AppPalette.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppPalette.border),
+        ),
+        child: Column(
+          children: [
+            TableCalendar<Attendance>(
+              firstDay: DateTime(2020),
+              lastDay: DateTime(now.year + 1, 12, 31),
+              focusedDay: c.focusedDay.value,
+              startingDayOfWeek: StartingDayOfWeek.monday,
+              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+              rowHeight: 44,
+              selectedDayPredicate: (d) =>
+                  selected != null && isSameDay(d, selected),
+              onDaySelected: (d, _) => c.selectDay(d),
+              onPageChanged: (f) => c.focusedDay.value = f,
+              headerStyle: HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+                titleTextStyle: appText(15, weight: FontWeight.w600),
+                leftChevronIcon:
+                    const Icon(Icons.chevron_left_rounded, color: AppPalette.textPrimary),
+                rightChevronIcon:
+                    const Icon(Icons.chevron_right_rounded, color: AppPalette.textPrimary),
+              ),
+              daysOfWeekStyle: DaysOfWeekStyle(
+                weekdayStyle: appText(11, color: AppPalette.textSecondary),
+                weekendStyle: appText(11, color: AppPalette.textSecondary),
+              ),
+              calendarBuilders: CalendarBuilders(
+                defaultBuilder: (_, d, _) => cell(d),
+                todayBuilder: (_, d, _) => cell(d),
+                selectedBuilder: (_, d, _) => cell(d),
+                outsideBuilder: (_, d, _) => cell(d, outside: true),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _calStat(Icons.local_fire_department_rounded, AppPalette.warning,
+                    '${c.currentStreak} day streak'),
+                _calStat(Icons.event_available_rounded, AppPalette.secondary,
+                    '${c.visitsInFocusedMonth} visits in ${DateFormat('MMM').format(c.focusedDay.value)}'),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _calStat(IconData icon, Color color, String text) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(text, style: appText(12, weight: FontWeight.w600)),
+        ],
+      );
 }
 
 class _AttendanceCard extends StatelessWidget {

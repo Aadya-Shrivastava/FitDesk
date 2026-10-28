@@ -121,7 +121,7 @@ class AttendanceController extends GetxController {
       final payload = {
         "date": oldDate,
         "status": status.value,
-        "checked_in_time": oldCheckinTime,
+        "checked_in_time": _toHHmm(oldCheckinTime),
         "checked_out_time": checkoutTime,
         "checkin_address": checkinAddress.value,
         "checkout_address": checkoutAddress.value.isEmpty ? "Auto checkout" : checkoutAddress.value,
@@ -155,8 +155,8 @@ class AttendanceController extends GetxController {
       }
       if (data == null) return; // nothing recorded for today on the server yet
 
-      checkedInTime.value = (data['checked_in_time'] ?? checkedInTime.value).toString();
-      checkedOutTime.value = (data['checked_out_time'] ?? checkedOutTime.value).toString();
+      checkedInTime.value = _toHHmm((data['checked_in_time'] ?? checkedInTime.value).toString());
+      checkedOutTime.value = _toHHmm((data['checked_out_time'] ?? checkedOutTime.value).toString());
       checkinAddress.value = (data['checkin_address'] ?? checkinAddress.value).toString();
       checkoutAddress.value = (data['checkout_address'] ?? checkoutAddress.value).toString();
 
@@ -216,6 +216,12 @@ class AttendanceController extends GetxController {
 
   String _nowTimeHHmm() => DateFormat('HH:mm').format(DateTime.now());
 
+  // GET returns times as "HH:mm:ss" but POST validates "H:i"; trim seconds.
+  String _toHHmm(String t) {
+    final m = RegExp(r'^(\d{1,2}):(\d{2})').firstMatch(t.trim());
+    return m == null ? t : '${m.group(1)!.padLeft(2, '0')}:${m.group(2)}';
+  }
+
   // -------------------- ACTIONS --------------------
   Future<void> checkIn() async {
     if (hasCheckedIn.value) return;
@@ -272,7 +278,7 @@ class AttendanceController extends GetxController {
       final payload = {
         "date": date.value,
         "status": status.value,
-        "checked_in_time": checkedInTime.value,
+        "checked_in_time": _toHHmm(checkedInTime.value),
         "checked_out_time": time,
         "checkin_address": checkinAddress.value,
         "checkout_address": address,

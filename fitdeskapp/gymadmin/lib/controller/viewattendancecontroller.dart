@@ -74,10 +74,9 @@ class Viewattendancecontroller extends GetxController {
       final type = selectedType.value.toLowerCase();
       final apiDate = _uiDateToApiDate(dateController.text.trim());
 
-      final uri = Uri.parse(endpoint).replace(queryParameters: {
-        "type": type,
-        "date": apiDate,
-      });
+      final uri = Uri.parse(
+        endpoint,
+      ).replace(queryParameters: {"type": type, "date": apiDate});
 
       final resp = await http.get(
         uri,
@@ -199,13 +198,19 @@ class Viewattendancecontroller extends GetxController {
 
   void editAttendance(Attendance record) {
     final userName = record.user?.name ?? "-";
-    Get.snackbar("Edit", "Editing attendance for $userName",
-        snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar(
+      "Edit",
+      "Editing attendance for $userName",
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 
   void deleteAttendance(int index) {
     attendanceList.removeAt(index);
-    Get.snackbar("Deleted", "Attendance record removed successfully",
-        snackPosition: SnackPosition.BOTTOM);
+    Get.snackbar(
+      "Deleted",
+      "Attendance record removed successfully",
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
 }

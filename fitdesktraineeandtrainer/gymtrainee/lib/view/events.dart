@@ -6,10 +6,23 @@ import 'package:gymtrainee/theme/app_palette.dart';
 import 'package:gymtrainee/widgets/state_views.dart';
 import 'package:gymtrainee/widgets/ui_kit.dart';
 
-class EventsView extends StatelessWidget {
-  EventsView({super.key});
+class EventsView extends StatefulWidget {
+  const EventsView({super.key});
 
+  @override
+  State<EventsView> createState() => _EventsViewState();
+}
+
+class _EventsViewState extends State<EventsView> {
   final EventsController c = Get.put(EventsController());
+
+  @override
+  void initState() {
+    super.initState();
+    // The dashboard already created this controller, so onInit won't run
+    // again; reload so the list is fresh every time the screen opens.
+    if (!c.isLoading.value) c.fetchEvents();
+  }
 
   @override
   Widget build(BuildContext context) {

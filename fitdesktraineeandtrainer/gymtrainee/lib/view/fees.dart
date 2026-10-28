@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:gymtrainee/Model/extramodels.dart';
 import 'package:gymtrainee/controller/feescontroller.dart';
 import 'package:gymtrainee/theme/app_palette.dart';
+import 'package:gymtrainee/widgets/fee_receipt.dart';
 import 'package:gymtrainee/widgets/state_views.dart';
 import 'package:gymtrainee/widgets/ui_kit.dart';
 
@@ -192,10 +193,33 @@ class _FeeCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(f.notes!, style: appText(11.5, color: AppPalette.textSecondary)),
           ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _action(Icons.picture_as_pdf_rounded,
+                    f.isPaid || f.isPartial ? 'View receipt' : 'View invoice',
+                    () => FeeReceipt.open(f)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(child: _action(Icons.share_rounded, 'Share', () => FeeReceipt.share(f))),
+            ],
+          ),
         ],
       ),
     );
   }
+
+  Widget _action(IconData icon, String label, VoidCallback onTap) => OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 17, color: AppPalette.secondary),
+        label: Text(label, style: appText(12, weight: FontWeight.w600)),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          side: const BorderSide(color: AppPalette.border),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
 
   Widget _kv(String k, String v, {Color? color}) => Expanded(
         child: Column(

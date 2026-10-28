@@ -89,7 +89,8 @@ class ProfileController extends GetxController {
     if (plan is Map) return _s(plan, 'name').isNotEmpty ? _s(plan, 'name') : _s(plan, 'title');
     final named = _s(trainee, 'membership_name');
     if (named.isNotEmpty) return named;
-    return plan == null ? '' : 'Plan #$plan';
+    // A bare plan id ("17") means nothing to the user; let the views show their fallback.
+    return '';
   }
 
   DateTime? get membershipStart => DateTime.tryParse(_s(trainee, 'membership_start_date'));

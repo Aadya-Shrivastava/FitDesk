@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../controller/viewtrainercontroller.dart';
 import 'package:gymtrainee/theme/app_palette.dart';
+import 'package:gymtrainee/widgets/ui_kit.dart';
 import 'package:gymtrainee/widgets/state_views.dart';
 import 'package:gymtrainee/widgets/date_calc.dart';
 
@@ -18,22 +19,7 @@ class ViewTrainer extends StatelessWidget {
     // NOTE: ScreenUtilInit should be in main.dart, not here.
     return Scaffold(
       backgroundColor: AppPalette.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
-        ),
-        title: Text(
-          'Trainer Details',
-          style: GoogleFonts.poppins(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppPalette.primary,
-        elevation: 0,
-      ),
+      appBar: simpleAppBar('Trainer Details'),
       body: Obx(() {
         if (c.isLoading.value) return const LoadingView();
 
@@ -133,7 +119,7 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: AppPalette.primary,
+      color: AppPalette.background,
       child: Stack(
         children: [
           // Cover
@@ -141,11 +127,7 @@ class _HeaderCard extends StatelessWidget {
             height: 160.h,
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [AppPalette.primary, AppPalette.accent],
-              ),
+              gradient: AppPalette.headerGradient,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(18.r),
                 bottomRight: Radius.circular(18.r),

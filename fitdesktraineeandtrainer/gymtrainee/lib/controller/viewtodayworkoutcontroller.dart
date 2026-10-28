@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:gymtrainee/Model/workoutmodel.dart';
 import 'package:intl/intl.dart';
 import 'package:gymtrainee/widgets/api_client.dart';
@@ -13,9 +14,18 @@ class Viewtodayworkoutcontroller extends GetxController {
 
   final showDetails = true.obs;
 
+  // Exercises ticked today, and the dates every one of that day's exercises was done.
+  final doneKeys = <String>{}.obs;
+  final completedDays = <String>{}.obs;
+
+  static const _doneStoreKey = 'workoutDone'; // {"date": "yyyy-MM-dd", "keys": [...]}
+  static const _daysStoreKey = 'workoutCompletedDays'; // ["yyyy-MM-dd", ...]
+  final _box = GetStorage();
+
   @override
   void onInit() {
     super.onInit();
+    _loadProgress();
     fetchWorkouts();
   }
 
@@ -97,5 +107,84 @@ class Viewtodayworkoutcontroller extends GetxController {
       map[day]!.add(a);
     }
     return map;
+  }
+
+  // ---------------- completion tracking ----------------
+  String _dateKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+  String get _todayDate => _dateKey(DateTime.now());
+
+  /// Stable id for one exercise row of the selected plan.
+  String activityKey(String day, int index, Activities a) =>
+      '${selected.value?.id ?? 0}|$day|$index|${a.activityId ?? a.activityName ?? ''}';
+
+  bool isDone(String key) => doneKeys.contains(key);
+
+  void toggle(String key) {
+    if (!doneKeys.remove(key)) doneKeys.add(key);
+    _saveProgress();
+  }
+
+  /// Ticks every key, or clears them all if they're already all done.
+  void toggleAll(List<String> keys) {
+    if (keys.isNotEmpty && keys.every(isDone)) {
+      doneKeys.removeAll(keys);
+    } else {
+      doneKeys.addAll(keys);
+    }
+    _saveProgress();
+  }
+
+  /// The schedule day matching today's weekday ("Monday", "mon", ...), if any.
+  String? todayDay(Map<String, List<Activities>> grouped) {
+    final weekday = DateFormat('EEEE').format(DateTime.now()).toLowerCase();
+    for (final day in grouped.keys) {
+      final d = day.trim().toLowerCase();
+      if (d.length >= 3 && weekday.startsWith(d.substring(0, 3))) return day;
+    }
+    return null;
+  }
+
+  /// Keys for today's exercises; the whole plan when no day matches today.
+  List<String> todayKeys(Map<String, List<Activities>> grouped) {
+    final today = todayDay(grouped);
+    return [
+      for (final e in grouped.entries)
+        if (today == null || e.key == today)
+          for (var i = 0; i < e.value.length; i++) activityKey(e.key, i, e.value[i]),
+    ];
+  }
+
+  /// Consecutive completed days ending today (or yesterday, if today isn't finished yet).
+  int streak(Map<String, List<Activities>> grouped) {
+    final keys = todayKeys(grouped);
+    final todayDone = keys.isNotEmpty && keys.every(isDone);
+    var count = todayDone ? 1 : 0;
+    var d = DateTime.now().subtract(const Duration(days: 1));
+    while (completedDays.contains(_dateKey(d))) {
+      count++;
+      d = d.subtract(const Duration(days: 1));
+    }
+    return count;
+  }
+
+  void _loadProgress() {
+    final saved = _box.read(_doneStoreKey);
+    if (saved is Map && saved['date'] == _todayDate && saved['keys'] is List) {
+      doneKeys.assignAll((saved['keys'] as List).map((e) => e.toString()));
+    }
+    final days = _box.read(_daysStoreKey);
+    if (days is List) completedDays.assignAll(days.map((e) => e.toString()));
+  }
+
+  void _saveProgress() {
+    final w = selected.value;
+    final keys = todayKeys(groupByDay(w?.activities ?? <Activities>[]));
+    if (keys.isNotEmpty && keys.every(isDone)) {
+      completedDays.add(_todayDate);
+    } else {
+      completedDays.remove(_todayDate);
+    }
+    _box.write(_doneStoreKey, {'date': _todayDate, 'keys': doneKeys.toList()});
+    _box.write(_daysStoreKey, completedDays.toList());
   }
 }

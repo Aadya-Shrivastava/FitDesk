@@ -30,17 +30,18 @@ class Loginscreencontroller extends GetxController {
     isLoading.value = true;
     try {
       // Call your API here
+      final uri = Uri.parse("${Api.base}/auth/login");
+      final body = {'email': username, 'password': password};
+      final watch = Stopwatch()..start();
       final response = await http.post(
-        Uri.parse("${Api.base}/auth/login"),
-        body: json.encode({
-          'email': username,
-          'password': password,
-        }),
+        uri,
+        body: json.encode(body),
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
       ).timeout(const Duration(seconds: 20));
+      Api.logHttp('POST', uri, body: body, response: response, elapsed: watch.elapsed);
 
       if (response.statusCode == 200) {
         final decoded = json.decode(response.body);

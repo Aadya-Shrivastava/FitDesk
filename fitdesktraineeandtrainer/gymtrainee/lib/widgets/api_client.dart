@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
@@ -42,29 +44,38 @@ class Api {
 
   static Future<dynamic> get(String path) async {
     final uri = Uri.parse('$base$path');
-    return _send(path, () async => http.get(uri, headers: await _headers()));
+    return _send(path, 'GET', uri, null,
+        () async => http.get(uri, headers: await _headers()));
   }
 
   static Future<dynamic> post(String path, Map<String, dynamic> body) async {
     final uri = Uri.parse('$base$path');
     return _send(
       path,
+      'POST',
+      uri,
+      body,
       () async => http.post(uri, headers: await _headers(), body: json.encode(body)),
     );
   }
 
-  static Future<dynamic> _send(
-      String path, Future<http.Response> Function() call) async {
+  static Future<dynamic> _send(String path, String method, Uri uri,
+      Map<String, dynamic>? body, Future<http.Response> Function() call) async {
+    final watch = Stopwatch()..start();
     final http.Response res;
     try {
       res = await call().timeout(_timeout);
-    } on SocketException {
+    } on SocketException catch (e) {
+      logHttp(method, uri, body: body, error: e, elapsed: watch.elapsed);
       throw ApiException('No internet connection. Check your network and try again.');
-    } on TimeoutException {
+    } on TimeoutException catch (e) {
+      logHttp(method, uri, body: body, error: e, elapsed: watch.elapsed);
       throw ApiException('The server is taking too long to respond. Please try again.');
-    } on http.ClientException {
+    } on http.ClientException catch (e) {
+      logHttp(method, uri, body: body, error: e, elapsed: watch.elapsed);
       throw ApiException('Could not reach the server. Please try again.');
     }
+    logHttp(method, uri, body: body, response: res, elapsed: watch.elapsed);
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       if (res.body.trim().isEmpty) return <String, dynamic>{};
@@ -143,6 +154,41 @@ class Api {
   static void report(String where, Object e) {
     if (e is ApiException) return; // already shown by _debug
     _debug(where, e.toString());
+  }
+
+  /// Prints every request + response to the debug console (debug builds only).
+  static void logHttp(String method, Uri uri,
+      {Map<String, dynamic>? body,
+      http.Response? response,
+      Object? error,
+      Duration? elapsed}) {
+    if (!kDebugMode) return;
+    String pretty(Object? v) {
+      try {
+        return const JsonEncoder.withIndent('  ')
+            .convert(v is String ? json.decode(v) : v);
+      } catch (_) {
+        return v.toString();
+      }
+    }
+
+    final safeBody = body == null
+        ? null
+        : {
+            for (final e in body.entries)
+              e.key: e.key.toLowerCase().contains('password') ? '******' : e.value
+          };
+    final ms = elapsed == null ? '' : ' (${elapsed.inMilliseconds} ms)';
+    final out = StringBuffer('┌── $method $uri\n');
+    if (safeBody != null) out.write('│ Request: ${pretty(safeBody)}\n');
+    if (response != null) {
+      out.write('│ Status: ${response.statusCode}$ms\n');
+      out.write('│ Response: ${pretty(response.body)}\n');
+    }
+    if (error != null) out.write('│ Error: $error$ms\n');
+    out.write('└──────────');
+    // developer.log isn't cut off like print() for long JSON bodies.
+    developer.log(out.toString(), name: 'API');
   }
 
   static void _debug(String where, String text) {

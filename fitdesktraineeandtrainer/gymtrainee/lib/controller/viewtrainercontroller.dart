@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:gymtrainee/Model/json_utils.dart';
 import 'package:gymtrainee/Model/trainerdetailsmodel.dart';
 import 'package:gymtrainee/widgets/api_client.dart';
 
@@ -26,6 +27,12 @@ class ViewTrainerController extends GetxController {
       final body = await Api.get('/trainee/trainers');
       final list =
           Api.findList(body, ['trainers']).map(Trainers.fromJson).toList();
+      // The API returns one assigned trainer as an object:
+      // {data: {trainer_assigned: true, trainer: {...}}}
+      if (list.isEmpty) {
+        final single = asMap(asMap(asMap(body)?['data'])?['trainer']);
+        if (single != null && single.isNotEmpty) list.add(Trainers.fromJson(single));
+      }
       trainers.assignAll(list);
 
       // Select trainer by argument if passed, else first

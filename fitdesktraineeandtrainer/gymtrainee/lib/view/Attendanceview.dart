@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:gymtrainee/controller/Ateendancecontroller.dart';
 import 'package:gymtrainee/theme/app_palette.dart';
+import 'package:gymtrainee/widgets/ui_kit.dart';
 import 'package:gymtrainee/widgets/routes/page_constants.dart';
 
 
@@ -16,29 +17,13 @@ class AttendanceView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppPalette.background,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Get.back(),
+      appBar: simpleAppBar('Attendance', actions: [
+        IconButton(
+          tooltip: 'Attendance history',
+          icon: const Icon(Icons.history_rounded, color: Colors.white),
+          onPressed: () => Get.toNamed(RouteName.viewattendance),
         ),
-        title: Text(
-          'Attendance',
-          style: GoogleFonts.poppins(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: AppPalette.primary,
-        elevation: 0,
-        actions: [
-          IconButton(
-            tooltip: 'Attendance history',
-            icon: const Icon(Icons.history_rounded, color: Colors.white),
-            onPressed: () => Get.toNamed(RouteName.viewattendance),
-          ),
-        ],
-      ),
+      ]),
       body: Obx(() {
         return SingleChildScrollView(
           padding: EdgeInsets.all(16.w),
@@ -177,11 +162,7 @@ class _Header extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [AppPalette.primary, AppPalette.accent],
-        ),
+        gradient: AppPalette.headerGradient,
         borderRadius: BorderRadius.circular(18.r),
       ),
       child: Row(
